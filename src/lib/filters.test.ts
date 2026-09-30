@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Player } from "../types";
 import { applyFilters, DEFAULT_FILTERS, filtersFromParams, filtersToParams, normalize } from "./filters";
-import { formatDelta, formatMoney, formatPct, positionLabel } from "./format";
+import { competitionLabels, formatDelta, formatMoney, formatPct, positionLabel } from "./format";
 
 const base: Omit<Player, "id" | "name" | "age" | "delta" | "deltaPct" | "value" | "position" | "competitionId"> = {
   imageUrl: null, subPosition: null, dateOfBirth: null, nationality: null, club: { id: 1, name: "Club" },
@@ -58,4 +58,17 @@ describe("formato", () => {
     expect(positionLabel("Defender", null)).toBe("Defensa");
   });
   it("normalize", () => expect(normalize("  Ødegaard Ñ ")).toBe("ødegaard n"));
+});
+
+describe("competitionLabels", () => {
+  it("distingue ligas con el mismo nombre", () => {
+    const m = competitionLabels([
+      { id: "L1", name: "Bundesliga", country: "Germany" },
+      { id: "A1", name: "Bundesliga", country: "Austria" },
+      { id: "ES1", name: "Laliga", country: "Spain" },
+    ]);
+    expect(m.get("L1")).toBe("Bundesliga (Alemania)");
+    expect(m.get("A1")).toBe("Bundesliga (Austria)");
+    expect(m.get("ES1")).toBe("LaLiga");
+  });
 });

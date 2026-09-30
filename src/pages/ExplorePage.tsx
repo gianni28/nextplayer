@@ -59,7 +59,7 @@ function Explore({ data }: { data: Dataset }) {
           </p>
         </div>
 
-        <FilterBar filters={filters} update={update} data={data} canReset={!isDefault} reset={() => setParams({}, { replace: true })} />
+        <FilterBar filters={filters} update={update} data={data} compNames={compNames} canReset={!isDefault} reset={() => setParams({}, { replace: true })} />
 
         {visible.length === 0 ? (
           <div className="mt-6 rounded-2xl border border-dashed border-line px-6 py-14 text-center">
@@ -153,7 +153,7 @@ function Spotlight({ data, compNames }: { data: Dataset; compNames: Map<string, 
 const POSITIONS: Position[] = ["Goalkeeper", "Defender", "Midfield", "Attack"];
 const AGES = [19, 21, 23, 25, 28];
 
-function FilterBar({ filters, update, data, canReset, reset }: { filters: Filters; update: (p: Partial<Filters>) => void; data: Dataset; canReset: boolean; reset: () => void }) {
+function FilterBar({ filters, update, data, compNames, canReset, reset }: { filters: Filters; update: (p: Partial<Filters>) => void; data: Dataset; compNames: Map<string, string>; canReset: boolean; reset: () => void }) {
   return (
     <div className="mt-6 grid grid-cols-2 gap-2 rounded-2xl border border-line bg-raised p-3 sm:gap-3 lg:grid-cols-[1.5fr_repeat(4,minmax(0,1fr))_auto]">
       <label className="relative col-span-2 lg:col-span-1">
@@ -180,11 +180,13 @@ function FilterBar({ filters, update, data, canReset, reset }: { filters: Filter
       </Select>
       <Select label="Liga" value={filters.competition} onChange={(v) => update({ competition: v })}>
         <option value="">Liga: todas</option>
-        {data.competitions.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name}
-          </option>
-        ))}
+        {[...data.competitions]
+          .sort((a, b) => (compNames.get(a.id) ?? a.name).localeCompare(compNames.get(b.id) ?? b.name, "es"))
+          .map((c) => (
+            <option key={c.id} value={c.id}>
+              {compNames.get(c.id) ?? c.name}
+            </option>
+          ))}
       </Select>
       <Select label="Edad" value={filters.maxAge === null ? "" : String(filters.maxAge)} onChange={(v) => update({ maxAge: v ? Number(v) : null })}>
         <option value="">Edad: cualquiera</option>

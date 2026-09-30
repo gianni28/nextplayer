@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Dataset, Player } from "../types";
+import { competitionLabels } from "../lib/format";
 
 type State =
   | { status: "loading" }
@@ -41,7 +42,7 @@ export const useData = () => useContext(DataContext);
 export function useCompetitionNames(): Map<string, string> {
   const state = useData();
   return useMemo(
-    () => new Map(state.status === "ready" ? state.data.competitions.map((c) => [c.id, c.name]) : []),
+    () => competitionLabels(state.status === "ready" ? state.data.competitions : []),
     [state],
   );
 }

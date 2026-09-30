@@ -1,4 +1,4 @@
-import type { Position } from "../types";
+import type { Competition, Position } from "../types";
 
 const nf1 = new Intl.NumberFormat("es-ES", { maximumFractionDigits: 1 });
 const nf0 = new Intl.NumberFormat("es-ES", { maximumFractionDigits: 0 });
@@ -67,9 +67,21 @@ const COUNTRY: Record<string, string> = {
   Türkiye: "Turquía", Serbia: "Serbia", Scotland: "Escocia", Wales: "Gales", Ireland: "Irlanda", Greece: "Grecia",
   Ukraine: "Ucrania", "Czech Republic": "Chequia", Hungary: "Hungría", Algeria: "Argelia", Egypt: "Egipto",
   Mali: "Malí", Guinea: "Guinea", "DR Congo": "R. D. del Congo", Georgia: "Georgia", Slovenia: "Eslovenia",
-  Slovakia: "Eslovaquia", Romania: "Rumanía", Canada: "Canadá", Australia: "Australia", Tunisia: "Túnez",
+  Russia: "Rusia", Slovakia: "Eslovaquia", Romania: "Rumanía", Canada: "Canadá", Australia: "Australia", Tunisia: "Túnez",
 };
 
 export function countryLabel(name: string | null): string | null {
   return name ? (COUNTRY[name] ?? name) : null;
+}
+
+const COMPETITION_NAME: Record<string, string> = { Laliga: "LaLiga", "Pko BP Ekstraklasa": "PKO BP Ekstraklasa", "Liga MX Clausura": "Liga MX" };
+
+/** Nombres de liga legibles; si dos ligas se llaman igual, agrega el país. */
+export function competitionLabels(list: Competition[]): Map<string, string> {
+  const base = list.map((c) => ({ ...c, label: COMPETITION_NAME[c.name] ?? c.name }));
+  const count = new Map<string, number>();
+  base.forEach((c) => count.set(c.label, (count.get(c.label) ?? 0) + 1));
+  return new Map(
+    base.map((c) => [c.id, (count.get(c.label) ?? 0) > 1 && c.country ? `${c.label} (${countryLabel(c.country)})` : c.label]),
+  );
 }
