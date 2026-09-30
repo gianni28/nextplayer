@@ -1,0 +1,42 @@
+name: Actualizar datos
+
+on:
+  schedule:
+    - cron: "17 6 * * 1" # lunes 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Descargar dataset y recalcular el ranking
+        run: npm run data
+      - name: Publicar si cambió
+        run: |
+          # generatedAt cambia siempre; solo publicamos si cambiaron los datos de verdad.
+          jq 'del(.generatedAt)' public/data/players.json > /tmp/new.json
+          if git cat-file -e HEAD:public/data/players.json 2>/dev/null; then
+            git show HEAD:public/data/players.json | jq 'del(.generatedAt)' > /tmp/old.json
+            if cmp -s /tmp/old.json /tmp/new.json; then
+              echo "Sin cambios en los datos."
+              exit 0
+            fi
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f public/data/players.json
+          git commit -m "Actualiza datos al $(jq -r .dataAsOf public/data/players.json)"
+          git push

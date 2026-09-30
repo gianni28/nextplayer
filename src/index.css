@@ -1,0 +1,82 @@
+@import "@fontsource-variable/manrope";
+@import "@fontsource/barlow-condensed/latin-600.css";
+@import "@fontsource/barlow-condensed/latin-700.css";
+@import "@fontsource/barlow-condensed/latin-800.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Claro: gris azulado frío, azul NextPlayer y verde solo para subidas. */
+    --surface: 244 246 249;
+    --raised: 255 255 255;
+    --ink: 15 27 45;
+    --muted: 88 102 122;
+    --line: 222 228 237;
+    --brand: 28 90 189;
+    --brand-ink: 255 255 255;
+    --up: 12 138 76;
+    --danger: 196 43 43;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface: 11 18 29;
+      --raised: 18 28 43;
+      --ink: 232 238 248;
+      --muted: 150 164 186;
+      --line: 34 48 68;
+      --brand: 84 145 245;
+      --brand-ink: 8 16 30;
+      --up: 52 211 128;
+      --danger: 248 113 113;
+      color-scheme: dark;
+    }
+  }
+  html {
+    @apply bg-surface font-sans text-ink antialiased;
+  }
+  body {
+    @apply min-h-screen;
+  }
+  :focus-visible {
+    @apply outline outline-2 outline-offset-2 outline-brand;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+}
+
+@layer components {
+  .page {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6;
+  }
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+  .field {
+    @apply h-11 w-full rounded-lg border border-line bg-raised px-3 text-sm text-ink placeholder:text-muted/80 focus:border-brand focus:outline-none;
+  }
+  .btn {
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-primary {
+    @apply btn bg-brand text-brand-ink hover:bg-brand/90;
+  }
+  .btn-quiet {
+    @apply btn border border-line bg-raised text-ink hover:border-muted/50;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
