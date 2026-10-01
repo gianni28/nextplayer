@@ -14,7 +14,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const ctrl = new AbortController();
-    fetch("/data/players.json", { signal: ctrl.signal })
+    // no-cache: revalida siempre con el servidor (barato gracias al ETag), así nunca se queda un ranking viejo.
+    fetch("/data/players.json", { signal: ctrl.signal, cache: "no-cache" })
       .then((r) => {
         // Un 404, o el index.html que devuelve el hosting como SPA, significa que aún no hay datos.
         if (r.status === 404 || !(r.headers.get("content-type") ?? "").includes("json")) throw new Error("sin-datos");
