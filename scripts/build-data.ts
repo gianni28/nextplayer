@@ -73,6 +73,7 @@ async function readCsv(file: string, keep?: Set<string>): Promise<Row[]> {
 }
 
 async function main() {
+  console.log("→ Descargando la base de transfermarkt-datasets…");
   const [basePlayers, baseValuations, competitions, clubs] = await Promise.all([
     readCsv("players.csv.gz", PLAYER_COLUMNS),
     readCsv("player_valuations.csv.gz", new Set(["player_id", "date", "market_value_in_eur"])),
