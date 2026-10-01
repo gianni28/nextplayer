@@ -1,1 +1,4 @@
+# Un archivo de /assets que ya no existe debe dar 404 (no index.html),
+# para que la app detecte la versión vieja y se recargue.
+/assets/*  /404.html  404
 /*    /index.html   200
