@@ -11,6 +11,7 @@
     "test": "vitest run",
     "typecheck": "tsc -b",
     "data": "tsx scripts/build-data.ts",
+    "data:tm": "tsx scripts/build-data.ts --transfermarkt",
     "data:sample": "tsx scripts/sample-data.ts"
   },
   "dependencies": {

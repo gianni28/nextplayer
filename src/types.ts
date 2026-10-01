@@ -46,6 +46,8 @@ export interface Dataset {
   /** Tamaño de la ventana usada para calcular el aumento de valor. */
   windowMonths: number;
   source: { name: string; url: string; license: string };
+  /** Cuántos jugadores tienen valores consultados directamente a Transfermarkt. */
+  liveUpdated?: number;
   /** true si son datos inventados para desarrollo local. */
   sample?: boolean;
   competitions: Competition[];

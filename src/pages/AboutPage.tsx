@@ -11,12 +11,15 @@ export function AboutPage() {
 
       <div className="mt-6 space-y-4 leading-relaxed text-ink/90">
         <p>
-          NextPlayer muestra a los futbolistas cuyo valor de mercado más subió en los últimos {ds?.windowMonths ?? 12} meses. Los valores son las estimaciones de
-          Transfermarkt, tomadas del dataset abierto{" "}
+          NextPlayer muestra a los futbolistas cuyo valor de mercado más subió en los últimos {ds?.windowMonths ?? 12} meses. Los valores son las estimaciones de{" "}
+          <a className="font-semibold text-brand hover:underline" href="https://www.transfermarkt.com" target="_blank" rel="noreferrer">
+            Transfermarkt
+          </a>
+          . Los perfiles y el historial vienen del dataset abierto{" "}
           <a className="font-semibold text-brand hover:underline" href="https://github.com/dcaribou/transfermarkt-datasets" target="_blank" rel="noreferrer">
             transfermarkt-datasets
-          </a>
-          , publicado con licencia CC0.
+          </a>{" "}
+          (CC0), y los valores recientes se consultan directamente a Transfermarkt.
         </p>
 
         <h2 className="pt-4 font-display text-2xl font-bold uppercase">Cómo se calcula</h2>
@@ -29,8 +32,8 @@ export function AboutPage() {
 
         <h2 className="pt-4 font-display text-2xl font-bold uppercase">Actualización</h2>
         <p>
-          Un proceso automático en GitHub Actions descarga el dataset cada semana, recalcula el ranking y publica el resultado como un archivo estático. Por eso la
-          página carga al instante y no depende de ningún servidor.
+          Cada semana un script consulta los valores más recientes, recalcula el ranking y lo publica como un archivo estático. Por eso la página carga al instante y no
+          depende de ningún servidor. Ten en cuenta que Transfermarkt no cambia los valores a diario, sino por rondas varias veces al año.
         </p>
         {ds && (
           <dl className="num grid gap-3 rounded-2xl border border-line bg-raised p-5 text-sm sm:grid-cols-2">
@@ -44,10 +47,9 @@ export function AboutPage() {
             </div>
           </dl>
         )}
-        <p className="text-sm text-muted">
-          El dataset de origen pausó sus actualizaciones a mediados de 2026. Mientras siga así, el ranking refleja la última información disponible; si se reanuda,
-          NextPlayer se pondrá al día solo.
-        </p>
+        {ds?.liveUpdated ? (
+          <p className="text-sm text-muted">{ds.liveUpdated.toLocaleString("es-ES")} jugadores tienen valores consultados directamente a Transfermarkt.</p>
+        ) : null}
       </div>
     </div>
   );

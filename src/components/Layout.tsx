@@ -61,11 +61,11 @@ export function Footer() {
     <footer className="mt-16 border-t border-line">
       <div className="page flex flex-col gap-2 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
         <p>
-          Datos de{" "}
+          Valores de mercado de Transfermarkt · base de{" "}
           <a className="underline decoration-line underline-offset-2 hover:text-ink" href="https://github.com/dcaribou/transfermarkt-datasets" target="_blank" rel="noreferrer">
             transfermarkt-datasets
           </a>{" "}
-          (CC0), basados en valores de Transfermarkt
+          (CC0)
           {state.status === "ready" && <> · actualizados al {formatDate(state.data.dataAsOf)}</>}.
         </p>
         <p>
