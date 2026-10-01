@@ -13,5 +13,6 @@
 [[headers]]
   for = "/data/*"
   [headers.values]
-    Cache-Control = "public, max-age=3600"
+    # Siempre se revalida (con ETag es barato): así los datos nuevos se ven al instante.
+    Cache-Control = "public, max-age=0, must-revalidate"
 

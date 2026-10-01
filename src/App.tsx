@@ -16,7 +16,11 @@ const AboutPage = lazyPage(() => import("./pages/AboutPage").then((m) => m.About
 /** Al cambiar de página (no de filtros), vuelve arriba. */
 function ScrollToTop() {
   const { pathname } = useLocation();
-  useEffect(() => window.scrollTo(0, 0), [pathname]);
+  // Ojo: la función no debe devolver nada. En Edge/Chrome recientes scrollTo devuelve una
+  // promesa y React la tomaría como función de limpieza ("n is not a function").
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
   return null;
 }
 
