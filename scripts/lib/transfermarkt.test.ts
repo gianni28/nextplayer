@@ -77,4 +77,13 @@ describe("uso de los valores consultados", () => {
     expect(p1.current_club_name).toBe("Real Madrid");
     expect(p1.current_club_domestic_competition_id).toBe("ES1");
   });
+
+  it("deduce la liga de un club nuevo a partir de otros jugadores de ese club", () => {
+    const cache: TmCache = {
+      version: 1,
+      players: { "1": { fetchedAt: "2026-09-30T00:00:00Z", series: [["2026-09-20", 30_000_000]], clubId: 11, clubName: "Otro" } },
+    };
+    const out = applyCache({ players, valuations, clubs: [] }, cache);
+    expect(out.players.find((p) => p.player_id === "1")!.current_club_domestic_competition_id).toBe("GB1");
+  });
 });

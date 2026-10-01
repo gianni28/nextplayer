@@ -173,6 +173,12 @@ export function applyCache(
   }
 
   const clubComp = new Map(input.clubs.map((c) => [String(c.club_id), c.domestic_competition_id ?? ""]));
+  // Clubes que no están en clubs.csv: deducimos la liga de otros jugadores de ese club.
+  for (const r of input.players) {
+    if (r.current_club_id && r.current_club_domestic_competition_id && !clubComp.get(r.current_club_id)) {
+      clubComp.set(r.current_club_id, r.current_club_domestic_competition_id);
+    }
+  }
   const players = input.players.map((r) => {
     const c = cache.players[String(Number(r.player_id))];
     if (!c || !c.clubId || String(c.clubId) === r.current_club_id) return r;
