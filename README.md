@@ -52,9 +52,9 @@ No hay servidor propio. El dataset abierto da la base (perfiles e historial) y l
 El dataset abierto pausó sus actualizaciones en julio de 2026 porque Transfermarkt dejó de responder a GitHub Actions. Por eso los valores recientes se consultan **desde un PC**:
 
 - **Windows:** doble clic en `actualizar-datos.cmd`. En macOS o Linux: `./actualizar-datos.sh`.
-- El script descarga la base, consulta el gráfico de valor de mercado de cada jugador en Transfermarkt (hasta 4.000 por corrida, unos 15 minutos), recalcula el ranking y sube `public/data/players.json` y `data/transfermarkt.json`. Netlify publica solo.
+- El script descarga la base, consulta el gráfico de valor de mercado de cada jugador en Transfermarkt (hasta 4.000 por corrida, unos 30 minutos: valor e historial de fichajes de cada uno), recalcula el ranking y sube `public/data/players.json` y `data/transfermarkt.json`. Netlify publica solo.
 - Cada corrida consulta primero a los que nunca se han consultado o llevan más tiempo sin consultarse, entre activos menores de 32 años y con valor de al menos 500 mil €. Se puede cortar con Ctrl+C y seguir después: lo avanzado se guarda.
-- Además del valor, toma el club de la valoración más reciente, así los fichajes posteriores al dataset quedan bien.
+- Además del valor, toma el club actual del historial de fichajes (incluye préstamos), así los fichajes posteriores al dataset quedan bien.
 - Si Transfermarkt rechaza muchas consultas seguidas, se detiene sin perder lo avanzado.
 
 Para que corra solo cada semana (Windows), en una terminal:

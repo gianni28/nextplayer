@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyCache, emptyCache, parseCeapi, parseMarketValue, parseTmDate, pickCandidates, type TmCache } from "./transfermarkt";
+import { applyCache, emptyCache, parseCeapi, parseMarketValue, parseTmDate, parseTransfers, pickCandidates, type TmCache } from "./transfermarkt";
 
 describe("lectura de Transfermarkt", () => {
   it("fechas en inglés y en formato día/mes/año", () => {
@@ -36,6 +36,19 @@ describe("lectura de Transfermarkt", () => {
     expect(r.clubName).toBe("Real Madrid");
     expect(parseCeapi({ error: "x" })).toBeNull();
   });
+
+  it("toma el club del último fichaje ya ocurrido, sin contar los futuros", () => {
+    const body = {
+      transfers: [
+        { dateUnformatted: "2024-07-01", to: { href: "/rb-leipzig/startseite/verein/23826/saison_id/2024", clubName: "RB Leipzig" } },
+        { dateUnformatted: "2026-08-15", to: { href: "/real-madrid/startseite/verein/418/saison_id/2026", clubName: "Real Madrid" } },
+        { dateUnformatted: "2027-07-01", to: { href: "/fc-bayern/startseite/verein/27/saison_id/2027", clubName: "Bayern" } },
+        { dateUnformatted: "0000-00-00", to: { href: "/x/startseite/verein/1", clubName: "X" } },
+      ],
+    };
+    expect(parseTransfers(body, "2026-09-30")).toEqual({ date: "2026-08-15", clubId: 418, clubName: "Real Madrid" });
+    expect(parseTransfers({}, "2026-09-30")).toBeNull();
+  });
 });
 
 describe("uso de los valores consultados", () => {
@@ -59,7 +72,7 @@ describe("uso de los valores consultados", () => {
   });
 
   it("no repite a los consultados hace poco", () => {
-    const cache: TmCache = { version: 1, players: { "3": { fetchedAt: "2026-09-29T00:00:00Z", series: [["2026-06-01", 20_000_000]], clubId: 11, clubName: "Otro" } } };
+    const cache: TmCache = { version: 1, players: { "3": { fetchedAt: "2026-09-29T00:00:00Z", series: [["2026-06-01", 20_000_000]], clubId: 11, clubName: "Otro", clubFromTransfers: true } } };
     const ids = pickCandidates({ players, valuations }, cache, { budget: 10, minValue: 500_000, maxAge: 32, maxAgeDays: 6, now: new Date("2026-09-30") });
     expect(ids).toEqual([1]);
   });

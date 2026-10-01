@@ -9,6 +9,7 @@
 import type { Row } from "./compute";
 
 export const TM_BASE_URL = process.env.TM_BASE_URL ?? "https://www.transfermarkt.com";
+const TM_TRANSFERS_URL = process.env.TM_BASE_URL ?? "https://www.transfermarkt.co.uk";
 const USER_AGENT = "NextPlayer/2.0 (+https://github.com/gianni28/nextplayer)";
 
 export interface CachedPlayer {
@@ -16,9 +17,11 @@ export interface CachedPlayer {
   fetchedAt: string;
   /** Serie completa [fecha ISO, valor EUR], de la más antigua a la más reciente. */
   series: [string, number][];
-  /** Club de la valoración más reciente según Transfermarkt. */
+  /** Club actual: el del último fichaje o, si no hay, el de la última valoración. */
   clubId: number | null;
   clubName: string | null;
+  /** true si el club salió del historial de fichajes (más fiable que el del gráfico). */
+  clubFromTransfers?: boolean;
 }
 
 export interface TmCache {
@@ -103,6 +106,32 @@ export function parseCeapi(body: unknown, today = new Date().toISOString().slice
   return { series, clubId, clubName };
 }
 
+interface TransferEntry {
+  dateUnformatted?: string;
+  to?: { href?: string; clubName?: string };
+}
+
+/**
+ * Del historial de fichajes (`/ceapi/transferHistory/list/{id}`), el club del
+ * último movimiento ya ocurrido (incluye préstamos). Ignora fichajes futuros.
+ */
+export function parseTransfers(
+  body: unknown,
+  today = new Date().toISOString().slice(0, 10),
+): { date: string; clubId: number; clubName: string | null } | null {
+  const list = (body as { transfers?: TransferEntry[] } | null)?.transfers;
+  if (!Array.isArray(list)) return null;
+  let best: { date: string; clubId: number; clubName: string | null } | null = null;
+  for (const t of list) {
+    const d = (t.dateUnformatted ?? "").slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || d === "0000-00-00" || d > today) continue;
+    const id = Number(/verein\/(\d+)/.exec(t.to?.href ?? "")?.[1]);
+    if (!id) continue;
+    if (!best || d >= best.date) best = { date: d, clubId: id, clubName: t.to?.clubName?.trim() || null };
+  }
+  return best;
+}
+
 /**
  * Elige a quién consultar en esta corrida: primero los que nunca se han
  * consultado o llevan más tiempo sin consultarse, y entre ellos los de mayor valor.
@@ -141,7 +170,9 @@ export function pickCandidates(
     if (d < activeSince || v < opts.minValue) continue;
     const b = born.get(id);
     if (b && b < minBirth) continue;
-    const fetched = cache.players[id] ? Date.parse(cache.players[id].fetchedAt) : 0;
+    const c = cache.players[id];
+    // Los consultados antes de leer el historial de fichajes cuentan como pendientes.
+    const fetched = c && c.clubFromTransfers !== undefined ? Date.parse(c.fetchedAt) : 0;
     if (fetched > fresh) continue; // consultado hace poco
     pool.push({ id, value: v, fetched });
   }
@@ -214,23 +245,38 @@ export async function refreshFromTransfermarkt(
   let blocked: BlockedError | null = null;
   const started = Date.now();
 
-  const one = async (id: number) => {
+  const getJson = async (url: string): Promise<unknown | null | undefined> => {
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        const res = await fetch(`${TM_BASE_URL}/ceapi/marketValueDevelopment/graph/${id}`, {
+        const res = await fetch(url, {
           headers: { "User-Agent": USER_AGENT, Accept: "application/json", "Content-Type": "application/json" },
           signal: AbortSignal.timeout(20_000),
         });
         if (res.status === 404) return null;
-        if (res.status === 403 || res.status === 429 || res.status >= 500) throw new Error(`HTTP ${res.status}`);
-        const parsed = parseCeapi(await res.json());
-        if (parsed) return parsed;
-        throw new Error("respuesta vacía");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return await res.json();
       } catch {
         await sleep(1000 * 2 ** attempt);
       }
     }
     return undefined; // falló de verdad
+  };
+
+  const one = async (id: number) => {
+    const graph = await getJson(`${TM_BASE_URL}/ceapi/marketValueDevelopment/graph/${id}`);
+    if (graph === undefined) return undefined;
+    if (graph === null) return null;
+    const parsed = parseCeapi(graph);
+    if (!parsed) return undefined;
+    // El club del gráfico es el de la última valoración: si se cambió de equipo
+    // después (p. ej. en el mercado de verano), el historial de fichajes lo corrige.
+    const tr = await getJson(`${TM_TRANSFERS_URL}/ceapi/transferHistory/list/${id}`);
+    const last = tr ? parseTransfers(tr) : null;
+    const lastValuation = parsed.series[parsed.series.length - 1]?.[0] ?? "";
+    if (last && last.date >= lastValuation) {
+      return { ...parsed, clubId: last.clubId, clubName: last.clubName ?? parsed.clubName, clubFromTransfers: true };
+    }
+    return { ...parsed, clubFromTransfers: tr !== undefined };
   };
 
   const worker = async () => {
